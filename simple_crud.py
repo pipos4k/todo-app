@@ -27,25 +27,57 @@ def get_data():
         "items": data
     }), 200
 
+@application.route("/items/<item_id>", methods=["GET"])
+def search_item(item_id):
+    data = load_data()
+    item = next((item for item in data if item["id"] == item_id), None)
+
+    if item:
+        return jsonify({
+            "success": True,
+            "item": item
+        }), 200
+    else: 
+        return jsonify({
+            "success": False,
+            "item": f"Item with {item_id} not found."
+        }), 404 
+
 @application.route("/post_element", methods=["GET"])
 def show_form():
     return render_template("post_element.html")
 
 @application.route("/post_element", methods=["POST"])
-def post_element():
-    # request.get_json() 
+def create_data():
+    title = request.form.get("entry1")
+    description = request.form.get("entry2")
+    status = request.form.get("entry3")
+
     data = load_data()
-    new_id = max([item["id"] for item in data], default=0) +1
+
+    if data:
+        existing_id = [int(item["id"].split("_")[1]) for item in data]
+        new_number_id = max(existing_id)+1
+    else:
+        new_number_id = 1
+
+    new_id = f"item_{new_number_id}"
 
     new_item = {
         "id": new_id,
-        "name": "test"
+        "title": title,
+        "description": description,
+        "status": status,
     }
 
     data.append(new_item)
     save_data(data)
 
     return redirect(url_for("show_form"))
+
+@application.route("/search", methods=["GET"])
+def search_page():
+    return render_template("search.html")
 
 if __name__ == "__main__":
     application.run(debug=True, port=5000)

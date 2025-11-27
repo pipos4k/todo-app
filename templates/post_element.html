@@ -1,18 +1,14 @@
 <!DOCTYPE html>
-
 <html>
-
     <head>
         <meta charset="utf-8">
         <title>CRUD App</title>
     </head>
-
     <style>
         html {
             color: white;
             background-color: black;
         }
-
         text {
             font-size: 24px;
         }
@@ -21,26 +17,30 @@
         <center> <h1> CRUD Application </h1></center>
         <center> <text> Enter Object Data Below </text> </center>
         <br>
-
-        <form action="{{url_for('post_element')}}", method="post">
+        <form action="{{url_for('create_data')}}", method="post">
             <center> 
-                <label for="entry1">Enter Key:</label>
-                <input type="text" name="entry1">             
+                <label for="entry1">Title:</label>
+                <input type="text" name="entry1" required>             
                 <br>
                 <br>
-                <label for="entry2">Enter Value:</label>
-                <input type="text" name="entry2">             
+                <label for="entry2">Description:</label>
+                <input type="text" name="entry2" required>             
+                <br>
+                <br>
+                <label for="entry3"></label>
+                <select name="entry3" id="entry3" required>
+                    <option value="">-- Select status --</option>
+                    <option value="ToDo">To Do</option>
+                    <option value="InProgress">In Progress</option>
+                    <option value="Done">Done</option>
+                </select>
                 <br>
                 <br>
                 <input type="submit" value="Submit">
-
             </center>
-
             <br>
             <br>
-
         </form>
-
         <center> <button onclick="window.location.replace('/')">Return to Home Page</button> </center>
     </body>
 </html>
