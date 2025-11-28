@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 import os, json
+from datetime import datetime
 
 DATA_FILE = "data.json"
 application = Flask(__name__)
@@ -47,11 +48,26 @@ def search_item(item_id):
 def show_form():
     return render_template("post_element.html")
 
+@application.route("/items/status/<status>", methods=["GET"])
+def get_items_by_status(status):
+    data = load_data()
+
+    filtered_items = [item for item in data if item["status"] == status]
+
+    if filtered_items:
+        return jsonify({
+            "success": True,
+            "status": status,
+            "count": len(filtered_items),
+            "items": filtered_items
+        }), 200
+
 @application.route("/post_element", methods=["POST"])
 def create_data():
     title = request.form.get("entry1")
     description = request.form.get("entry2")
     status = request.form.get("entry3")
+    timestamp = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
     data = load_data()
 
@@ -68,6 +84,7 @@ def create_data():
         "title": title,
         "description": description,
         "status": status,
+        "time": timestamp,
     }
 
     data.append(new_item)
@@ -75,9 +92,5 @@ def create_data():
 
     return redirect(url_for("show_form"))
 
-@application.route("/search", methods=["GET"])
-def search_page():
-    return render_template("search.html")
-
 if __name__ == "__main__":
-    application.run(debug=True, port=5000)
+    application.run(debug=True, port=5001)
