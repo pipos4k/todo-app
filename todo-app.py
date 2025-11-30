@@ -22,6 +22,27 @@ def home_page():
 @application.route("/items", methods=["GET"])
 def get_data():
     data = load_data()    
+
+    status = request.args.get("status")
+
+    if status:
+        valid_statuses = ["ToDo", "InProgress", "Done"]
+
+        if status not in valid_statuses:
+            return jsonify({
+                "success": False,
+                "error": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+            }), 400
+        
+        filitere_items = [item for item in data if item["status"] == status]
+
+        return jsonify({
+            "success": True,
+            "count": len(filitere_items),
+            "status": status,
+            "items": filitere_items
+        }), 200
+
     return jsonify({
         "success": True,
         "count": len(data),
@@ -47,20 +68,6 @@ def search_item(item_id):
 @application.route("/post_element", methods=["GET"])
 def show_form():
     return render_template("post_element.html")
-
-@application.route("/items/status/<status>", methods=["GET"])
-def get_items_by_status(status):
-    data = load_data()
-
-    filtered_items = [item for item in data if item["status"] == status]
-
-    if filtered_items:
-        return jsonify({
-            "success": True,
-            "status": status,
-            "count": len(filtered_items),
-            "items": filtered_items
-        }), 200
 
 @application.route("/post_element", methods=["POST"])
 def create_data():
@@ -88,6 +95,17 @@ def create_data():
     }
 
     data.append(new_item)
+    save_data(data)
+
+    return redirect(url_for("show_form"))
+
+@application.route("/delete/<item_id>", methods=["DELETE"])
+def delete_item(item_id):
+    data = load_data()
+
+    index_item = (item for item in data if item["id"] == item_id)
+
+    data.remove(index_item)
     save_data(data)
 
     return redirect(url_for("show_form"))
