@@ -1,19 +1,34 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for
-import os, json
+import os, sqlite3
 from datetime import datetime
 
-DATA_FILE = "data.json"
+DB_PATH = "/data/todo.db"
 application = Flask(__name__)
 
-def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r") as file:
-            return json.load(file)
-    return []
+def init_db():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-def save_data(data):
-    with open(DATA_FILE, "w") as file:
-        json.dump(data, file, indent=2)
+    db_connection = sqlite3.connect(DB_PATH)
+    cursor = db_connection.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS items (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            description TEXT,
+            status TEXT NOT NULL,
+            timestamp TEXT
+        )
+    ''')
+    db_connection.commit()
+    db_connection.close()
+
+def get_db_connection():
+    db_connection = sqlite3.connect(DB_PATH)
+    db_connection.row_factory = sqlite3.Row
+    return db_connection
+
+# Initialize database on startup
+init_db()
 
 @application.route("/")
 def home_page():
@@ -21,94 +36,103 @@ def home_page():
 
 @application.route("/items", methods=["GET"])
 def get_data():
-    data = load_data()    
-
     status = request.args.get("status")
+
+    db_connection = get_db_connection()
+    cursor = db_connection.cursor()
 
     if status:
         valid_statuses = ["ToDo", "InProgress", "Done"]
 
         if status not in valid_statuses:
+            db_connection.close()
+
             return jsonify({
                 "success": False,
                 "error": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
             }), 400
         
-        filitere_items = [item for item in data if item["status"] == status]
+        cursor.execute("SELECT * FROM items WHERE status = ?", (status,))
+    else:
+        cursor.execute("SELECT * FROM items")
 
-        return jsonify({
-            "success": True,
-            "count": len(filitere_items),
-            "status": status,
-            "items": filitere_items
-        }), 200
+    rows = cursor.fetchall()
+    items = [dict(row) for row in rows]
+    db_connection.close()
 
     return jsonify({
         "success": True,
-        "count": len(data),
-        "items": data
+        "count": len(items),
+        "items": items,
+        **({"status": status} if status else {}),
     }), 200
 
 @application.route("/items/<item_id>", methods=["GET"])
 def search_item(item_id):
-    data = load_data()
-    item = next((item for item in data if item["id"] == item_id), None)
+    db_connection = get_db_connection()
+    cursor = db_connection.cursor()
+    cursor.execute("SELECT * FROM items WHERE id = ?", (item_id, ))
+    row = cursor.fetchone()
+    db_connection.close()
 
-    if item:
+    if row:
         return jsonify({
             "success": True,
-            "item": item
+            "item": dict(row)
         }), 200
     else: 
         return jsonify({
             "success": False,
             "item": f"Item with {item_id} not found."
         }), 404 
-
+ 
 @application.route("/post_element", methods=["GET"])
 def show_form():
     return render_template("post_element.html")
-
+# 
 @application.route("/post_element", methods=["POST"])
 def create_data():
     title = request.form.get("entry1")
     description = request.form.get("entry2")
     status = request.form.get("entry3")
     timestamp = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+ 
+    db_connection = get_db_connection()
+    cursor = db_connection.cursor()
+    cursor.execute("SELECT id FROM items")
+    ids = cursor.fetchall()
 
-    data = load_data()
-
-    if data:
-        existing_id = [int(item["id"].split("_")[1]) for item in data]
+    if ids:
+        existing_id = [int(item["id"].split("_")[1]) for item in ids]
         new_number_id = max(existing_id)+1
     else:
         new_number_id = 1
-
+ 
     new_id = f"item_{new_number_id}"
+ 
+    cursor.execute('''
+        INSERT INTO items (id, title, description, status, timestamp)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (new_id, title, description, status, timestamp))
 
-    new_item = {
-        "id": new_id,
-        "title": title,
-        "description": description,
-        "status": status,
-        "time": timestamp,
-    }
-
-    data.append(new_item)
-    save_data(data)
-
+    db_connection.commit()
+    db_connection.close()
+    
     return redirect(url_for("show_form"))
 
-@application.route("/delete/<item_id>", methods=["DELETE"])
+@application.route("/delete/<item_id>", methods=["POST"])
 def delete_item(item_id):
-    data = load_data()
-
-    index_item = (item for item in data if item["id"] == item_id)
-
-    data.remove(index_item)
-    save_data(data)
+    try:
+        db_connection = get_db_connection()
+        cursor = db_connection.cursor()
+        cursor.execute("DELETE FROM items WHERE id = ?", (item_id,))
+        db_connection.commit()
+    except Exception as e: 
+        print(f"Error deleting item: {e}")
+    finally:
+        db_connection.close()
 
     return redirect(url_for("show_form"))
 
 if __name__ == "__main__":
-    application.run(debug=True, port=5001)
+    application.run(debug=True, host="0.0.0.0", port=5000)
