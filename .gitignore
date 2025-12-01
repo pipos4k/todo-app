@@ -1,4 +1,8 @@
- 
-data.json
+# Python cache
+__pycache__/
 
-.venv
+# Virtual environment
+.venv/
+
+# App runtime data (only if auto-generated)
+data/
