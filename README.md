@@ -21,16 +21,30 @@ Basically, it's a simple list manager where you can add and view items.
 - Python
 - Flask
 - HTML/CSS
-
+- Docker
+- SQLite
+  
 ## How to run it
 
+### Without docker 
 1. Clone the repo on your machine. <br/>
 `git clone https://github.com/pipos4k/todo-app.git`
-2. Install Flask <br/>
+2. Navigate to the project. <br/>
+`cd todo-app`
+3. Install Flask <br/>
 `pip install flask`
-3. Run the app: <br/>
+4. Run the app: <br/>
 `python3 todo-app.py`
-4. Open http://localhost:5001 in your browser
+5. Open http://localhost:5000 in your browser
+
+### With docker
+1. Clone the repo on your machine. <br/>
+`git clone https://github.com/pipos4k/todo-app.git`
+2. Navigate to the project. <br/>
+`cd todo-app`
+3. Build and run with docker compose <br/>
+`docker compose up --build`
+4. Open http://localhost:5000 in your browser
 
 ## Note
 
