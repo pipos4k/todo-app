@@ -25,18 +25,6 @@ Basically, it's a simple list manager where you can add and view items.
 - SQLite
   
 ## How to run it
-
-### Without docker 
-1. Clone the repo on your machine. <br/>
-`git clone https://github.com/pipos4k/todo-app.git`
-2. Navigate to the project. <br/>
-`cd todo-app`
-3. Install Flask <br/>
-`pip install flask`
-4. Run the app: <br/>
-`python3 todo-app.py`
-5. Open http://localhost:5000 in your browser
-
 ### With docker
 1. Clone the repo on your machine. <br/>
 `git clone https://github.com/pipos4k/todo-app.git`
