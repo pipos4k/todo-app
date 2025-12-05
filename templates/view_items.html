@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>CRUD App</title>
+    </head>
+
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            table-layout: fixed;
+        }
+
+        th {
+            padding: 20px 15px;
+            text-align: left;
+            border-bottom: 2px solid #333;
+            font-size: 18px;
+        }
+
+        td {
+            padding: 25px 15px;
+            border-bottom: 1px solid #333;
+            vertical-align: top;
+        }
+
+        tr {
+            margin-bottom: 15px;
+        }
+
+        /* Column widths */
+        th:nth-child(1), td:nth-child(1) { width: 50px; } /* ID */
+        th:nth-child(2), td:nth-child(2) { width: 200px; } /* Title */
+        th:nth-child(3), td:nth-child(3) { width: 250px; } /* Description */
+        th:nth-child(4), td:nth-child(4) { width: 120px; } /* Status */
+        th:nth-child(5), td:nth-child(5) { width: 100px; } /* Timestamp */
+
+        /* Text truncation */
+        .truncate-title, .truncate-desc {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .no-items {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 18px;
+        }
+
+    </style>
+
+    <body>
+        <center>
+            <h1>All Items</h1>
+            <p>Total items: {{ items|length }}</p>
+        </center>
+          <center>
+              <button onclick="window.location.href='/'">Home</button>
+            <button onclick="window.location.href='/post_element'">Add New Item</button>
+        </center>
+
+        {% if items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>
+                        <span class="truncate-title" title="{{ item.title }}">
+                            {{ item.title[:100] }}{% if item.title|length > 100 %}...{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="truncate-desc" title="{{ item.description }}">
+                            {{ item.description[:200] }}{% if item.description|length > 200 %}...{% endif %}
+                        </span>
+                    </td>
+                    <td>{{ item.status }}</td>
+                    <td>{{ item.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="no-items">No items found. Add some items first!</p>
+        {% endif %}
+
+    </body>
+</html>
