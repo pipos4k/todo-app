@@ -60,12 +60,7 @@ def get_data():
     items = [dict(row) for row in rows]
     db_connection.close()
 
-    return jsonify({
-        "success": True,
-        "count": len(items),
-        "items": items,
-        **({"status": status} if status else {}),
-    }), 200
+    return render_template("view_items.html", items=items)
 
 @application.route("/items/<item_id>", methods=["GET"])
 def search_item(item_id):
