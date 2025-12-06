@@ -19,16 +19,16 @@
         <br>
         <form action="{{url_for('create_data')}}", method="post">
             <center> 
-                <label for="entry1">Title:</label>
-                <input type="text" name="entry1" required>             
+                <label for="title">Title:</label>
+                <input type="text" name="title" required>             
                 <br>
                 <br>
-                <label for="entry2">Description:</label>
-                <input type="text" name="entry2" required>             
+                <label for="description">Description:</label>
+                <input type="text" name="description" required>             
                 <br>
                 <br>
-                <label for="entry3"></label>
-                <select name="entry3" id="entry3" required>
+                <label for="status"></label>
+                <select name="status" id="status" required>
                     <option value="">-- Select status --</option>
                     <option value="ToDo">To Do</option>
                     <option value="InProgress">In Progress</option>

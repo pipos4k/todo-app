@@ -65,9 +65,9 @@ def show_form():
 # 
 @application.route("/post_element", methods=["POST"])
 def create_data():
-    title = request.form.get("entry1")
-    description = request.form.get("entry2")
-    status = request.form.get("entry3")
+    title = request.form.get("title")
+    description = request.form.get("description")
+    status = request.form.get("status")
     timestamp = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
  
     db_connection = setupDatabase.get_db_connection()
