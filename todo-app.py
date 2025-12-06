@@ -1,34 +1,12 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for
-import os, sqlite3
 from datetime import datetime
+import setupDatabase
 
 DB_PATH = "/data/todo.db"
 application = Flask(__name__)
 
-def init_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-
-    db_connection = sqlite3.connect(DB_PATH)
-    cursor = db_connection.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS items (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            description TEXT,
-            status TEXT NOT NULL,
-            timestamp TEXT
-        )
-    ''')
-    db_connection.commit()
-    db_connection.close()
-
-def get_db_connection():
-    db_connection = sqlite3.connect(DB_PATH)
-    db_connection.row_factory = sqlite3.Row
-    return db_connection
-
 # Initialize database on startup
-init_db()
+setupDatabase.init_db()
 
 @application.route("/")
 def home_page():
@@ -38,7 +16,7 @@ def home_page():
 def get_data():
     status = request.args.get("status")
 
-    db_connection = get_db_connection()
+    db_connection = setupDatabase.get_db_connection()
     cursor = db_connection.cursor()
 
     if status:
@@ -64,7 +42,7 @@ def get_data():
 
 @application.route("/items/<item_id>", methods=["GET"])
 def search_item(item_id):
-    db_connection = get_db_connection()
+    db_connection = setupDatabase.get_db_connection()
     cursor = db_connection.cursor()
     cursor.execute("SELECT * FROM items WHERE id = ?", (item_id, ))
     row = cursor.fetchone()
@@ -92,7 +70,7 @@ def create_data():
     status = request.form.get("entry3")
     timestamp = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
  
-    db_connection = get_db_connection()
+    db_connection = setupDatabase.get_db_connection()
     cursor = db_connection.cursor()
     cursor.execute("SELECT id FROM items")
     ids = cursor.fetchall()
@@ -118,7 +96,7 @@ def create_data():
 @application.route("/delete/<item_id>", methods=["POST"])
 def delete_item(item_id):
     try:
-        db_connection = get_db_connection()
+        db_connection = setupDatabase.get_db_connection()
         cursor = db_connection.cursor()
         cursor.execute("DELETE FROM items WHERE id = ?", (item_id,))
         db_connection.commit()
