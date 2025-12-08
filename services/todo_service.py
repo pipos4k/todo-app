@@ -50,4 +50,6 @@ def generate_new_item_id():
             new_id = max(existing_ids)+1
         else:
             new_id = 1
+    else:
+        new_id =1
     return f"item_{new_id}"
