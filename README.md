@@ -11,8 +11,9 @@ This is a basic backend CRUD application built with Flask for the **DevReady Boo
 ## API Endpoints
 
 - `GET /items` - Get all items as JSON
-- `GET /items/<id>` - Get specific item by ID
-- `GET /items/status/<status>` - Filter items by status
+- `GET /items/<id>` - Get specific item by ID 
+- `GET /items?status=<status>` - Filter items by status - "status": 'ToDo', 'InProgress', 'Done'
+- `POST /post_item` - Form data with `title`, `description`, `status`
  
 Basically, it's a simple list manager where you can add and view items.
 
