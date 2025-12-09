@@ -29,10 +29,10 @@ def search_item(item_id):
         return jsonify({"success": False, "error": error}), 404
     return jsonify({"success": True, "item": item}), 200
  
-@application.route("/post_element", methods=["GET", "POST"])
-def create_data():
+@application.route("/post_item", methods=["GET", "POST"])
+def create_item():
     if request.method == "GET":
-        return render_template("post_element.html")
+        return render_template("post_item.html")
 
     title = request.form.get("title")
     description = request.form.get("description")
@@ -47,7 +47,7 @@ def create_data():
     if error:
         return jsonify({"success": False, "error": error}), 404
 
-    return redirect(url_for("create_data"))
+    return redirect(url_for("create_item"))
 
 if __name__ == "__main__":
     application.run(debug=True, host="0.0.0.0", port=5000)
