@@ -38,6 +38,7 @@ def create_todo_item(title, description, status):
         return None, f"Failed to create item: {str(e)}"
 
 def generate_new_item_id():
+
     ids = repo.get_all_ids()
 
     if ids:
@@ -52,4 +53,11 @@ def generate_new_item_id():
             new_id = 1
     else:
         new_id =1
+
     return f"item_{new_id}"
+
+def delete_todo_item(item_id):
+    item = repo.delete_item(item_id)
+    if not item:
+        return None, "Item not found"
+    return item, None

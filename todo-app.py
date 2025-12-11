@@ -52,5 +52,15 @@ def create_item():
 
     return jsonify({"success": True, "item": created_item}), 201
 
+@application.route("/items/<item_id>", methods=["DELETE"])
+def delete_item(item_id):
+    item, error = todo_service.delete_todo_item(item_id)
+
+    if error:
+        return jsonify({"success": False, "error": error}), 404
+    
+    return jsonify({"success": True, "message": f"Delete success{item}"}), 200
+
 if __name__ == "__main__":
     application.run(debug=True, host="0.0.0.0", port=5000)
+    
