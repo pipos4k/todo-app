@@ -33,6 +33,7 @@ def get_all_ids():
     return [dict(row) for row in ids]
 
 def create_item(item_id, title, description, status, timestamp):
+
     db_connection = get_db_connection()    
     cursor = db_connection.cursor()
 
@@ -45,3 +46,19 @@ def create_item(item_id, title, description, status, timestamp):
     db_connection.close()
     return {"id": item_id, "title": title, "decription": description,
             "status": status, "timestamp": timestamp}
+
+def delete_item(item_id):
+    db_connection = get_db_connection()
+    cursor = db_connection.cursor()
+
+    cursor.execute("SELECT * FROM items WHERE id = ?", (item_id, ))
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+    
+    cursor.execute("DELETE FROM items WHERE id = ?", (item_id, ))
+    db_connection.commit()
+    db_connection.close()
+
+    return dict(row)
