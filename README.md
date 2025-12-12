@@ -5,15 +5,17 @@ This is a basic backend CRUD application built with Flask for the **DevReady Boo
 ## What it does
 
 - **Create** new items
-- **Read** and view existing items  
-- **Update** and **Delete** will come soon!
+- **Read** and view existing items
+- **Delete**/**Update** items 
 
 ## API Endpoints
 
 - `GET /items` - Get all items as JSON
-- `GET /items/<id>` - Get specific item by ID 
+- `GET /items/<item_id>` - Get specific item by ID 
 - `GET /items?status=<status>` - Filter items by status - "status": 'ToDo', 'InProgress', 'Done'
 - `POST /post_item` - Form data with `title`, `description`, `status`
+- `DELETE /items/<item_id>` - Delete item by ID
+- `PUT /items/<item_id` - Update an item by ID
  
 Basically, it's a simple list manager where you can add and view items.
 
