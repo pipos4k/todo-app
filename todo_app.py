@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for
+from flask import Flask, jsonify, request
 from database import setup_database
 from services import todo_service
 
@@ -6,10 +6,6 @@ application = Flask(__name__)
 
 # Initialize database on startup
 setup_database.init_db()
-
-@application.route("/")
-def home_page():
-    return render_template("index.html")
 
 @application.route("/items", methods=["GET"])
 def get_all_items():
@@ -60,6 +56,29 @@ def delete_item(item_id):
         return jsonify({"success": False, "error": error}), 404
     
     return jsonify({"success": True, "message": f"Delete success{item}"}), 200
+
+@application.route("/items/<item_id>", methods=["PUT"])
+def update_item(item_id):
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"success": False, "error": "Not data provided."}), 400
+
+    updated_item ,error = todo_service.update_todo_item(
+        item_id = item_id,
+        title = data.get("title"),
+        description = data.get("description"),
+        status = data.get("status"),
+    )
+
+    if error:
+        return jsonify({"success": False, "error": error}), 404
+    
+    return jsonify({
+        "success": True,
+        "message": "Item updated successfully",
+        "item": updated_item
+    }), 200
 
 if __name__ == "__main__":
     application.run(debug=True, host="0.0.0.0", port=5000)
