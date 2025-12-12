@@ -59,5 +59,19 @@ def generate_new_item_id():
 def delete_todo_item(item_id):
     item = repo.delete_item(item_id)
     if not item:
-        return None, "Item not found"
+        return None, "Item not found."
     return item, None
+
+def update_todo_item(item_id, title=None, description=None, status=None):
+    if status:
+        valid_status = ["ToDo", "InProgress", "Done"]
+        if status not in valid_status:
+            return None, f"Invalid status. Must be one of: {', '.join(valid_status)}"
+        
+    updated_item = repo.update_item(item_id, title, description, status)
+
+    if not updated_item:
+        return None, "Item not found."
+    
+    return updated_item, None
+        
