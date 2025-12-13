@@ -22,7 +22,7 @@ def get_todo_by_id(item_id):
     return item, None
 
 def create_todo_item(title, description, status):
-    item_id = generate_new_item_id()
+    item_id = generate_new_todo_id()
     timestamp = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
     try:
@@ -37,8 +37,7 @@ def create_todo_item(title, description, status):
     except Exception as e:
         return None, f"Failed to create item: {str(e)}"
 
-def generate_new_item_id():
-
+def generate_new_todo_id():
     ids = repo.get_all_ids()
 
     if ids:

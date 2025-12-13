@@ -33,7 +33,6 @@ def get_all_ids():
     return [dict(row) for row in ids]
 
 def create_item(item_id, title, description, status, timestamp):
-
     db_connection = get_db_connection()    
     cursor = db_connection.cursor()
 
@@ -65,7 +64,6 @@ def delete_item(item_id):
     return dict(row)
 
 def update_item(item_id, title=None, description=None, status=None):
-
     db_connection = get_db_connection()
     cursor = db_connection.cursor()
 

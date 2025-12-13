@@ -64,7 +64,7 @@ def update_item(item_id):
     if not data:
         return jsonify({"success": False, "error": "Not data provided."}), 400
 
-    updated_item ,error = todo_service.update_todo_item(
+    updated_item, error = todo_service.update_todo_item(
         item_id = item_id,
         title = data.get("title"),
         description = data.get("description"),
