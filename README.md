@@ -17,13 +17,12 @@ This is a basic backend CRUD application built with Flask for the **DevReady Boo
 - `DELETE /items/<item_id>` - Delete an item by ID
 - `PUT /items/<item_id>` - Update an item by ID
  
-Basically, it's a simple list manager where you can add and view items.
+Basically, it's a simple list manager where you can add, update, delete and view items.
 
 ## What I used
 
 - Python
 - Flask
-- HTML/CSS
 - Docker
 - SQLite
   
