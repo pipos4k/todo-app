@@ -12,4 +12,4 @@ RUN mkdir -p /app/data
 
 EXPOSE 5000
 
-CMD ["python", "todo-app.py"]
+CMD ["python", "todo_app.py"]
