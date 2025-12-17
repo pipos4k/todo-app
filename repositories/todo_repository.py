@@ -11,7 +11,7 @@ def get_all_items():
 def get_items_by_status(status):
     db_connection = get_db_connection()
     cursor = db_connection.cursor()
-    cursor.execute("SELECT * FROM items WHERE status =?", (status,))
+    cursor.execute("SELECT * FROM items WHERE status = %s", (status,))
     rows = cursor.fetchall()
     db_connection.close()
     return [dict(row) for row in rows]
@@ -19,7 +19,7 @@ def get_items_by_status(status):
 def get_item_by_id(item_id):
     db_connection = get_db_connection()
     cursor = db_connection.cursor()
-    cursor.execute("SELECT * FROM items WHERE id = ?", (item_id,))
+    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id,))
     row = cursor.fetchone()
     db_connection.close()
     return dict(row) if row else None
@@ -38,7 +38,7 @@ def create_item(item_id, title, description, status, timestamp):
 
     cursor.execute('''
         INSERT INTO items (id, title, description, status, timestamp)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         ''', (item_id, title, description, status, timestamp))
     
     db_connection.commit()
@@ -51,13 +51,13 @@ def delete_item(item_id):
     cursor = db_connection.cursor()
 
     # Check if item exists
-    cursor.execute("SELECT * FROM items WHERE id = ?", (item_id, ))
+    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
     row = cursor.fetchone()
 
     if not row:
         return None # Item not found
     
-    cursor.execute("DELETE FROM items WHERE id = ?", (item_id, ))
+    cursor.execute("DELETE FROM items WHERE id = %s", (item_id, ))
     db_connection.commit()
     db_connection.close()
 
@@ -68,7 +68,7 @@ def update_item(item_id, title=None, description=None, status=None):
     cursor = db_connection.cursor()
 
     # Check if item exists
-    cursor.execute("SELECT * FROM items WHERE id = ?", (item_id,))    
+    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id,))    
     row = cursor.fetchone()
 
     if not row:
@@ -79,15 +79,15 @@ def update_item(item_id, title=None, description=None, status=None):
     params = []
 
     if title is not None:
-        updates.append("title = ?")
+        updates.append("title = %s")
         params.append(title)
 
     if description is not None:
-        updates.append("description = ?")
+        updates.append("description = %s")
         params.append(description)
 
     if status is not None:
-        updates.append("status = ?")
+        updates.append("status = %s")
         params.append(status)
 
     if not updates:
@@ -96,11 +96,11 @@ def update_item(item_id, title=None, description=None, status=None):
     
     params.append(item_id)
 
-    query = f"UPDATE items SET {', '.join(updates)} WHERE id = ?"
+    query = f"UPDATE items SET {', '.join(updates)} WHERE id = %s"
     cursor.execute(query, params)
     db_connection.commit()
     
-    cursor.execute("SELECT * FROM items WHERE id = ?", (item_id, ))
+    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
     updated_item = cursor.fetchone()
     db_connection.close()
 

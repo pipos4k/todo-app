@@ -3,6 +3,7 @@ __pycache__/
 
 # Virtual environment
 .venv/
+.env 
 
 # App runtime data (only if auto-generated)
 data/

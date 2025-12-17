@@ -6,10 +6,28 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./data:/data           # Database persistence
-      - .:/app                      # Hot reload: sync code changes
-      - /app/__pycache__            # Exclude pycache
+      - .:/app
+      - /app/__pycache__
     environment:
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
+      - FLASK_ENV=${FLASK_ENV}
+      - FLASK_DEBUG=${FLASK_DEBUG}
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - db
     restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
