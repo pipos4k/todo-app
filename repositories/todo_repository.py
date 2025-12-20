@@ -55,6 +55,7 @@ def delete_item(item_id):
     row = cursor.fetchone()
 
     if not row:
+        db_connection.close()
         return None # Item not found
     
     cursor.execute("DELETE FROM items WHERE id = %s", (item_id, ))
