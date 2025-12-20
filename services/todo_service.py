@@ -25,6 +25,11 @@ def create_todo_item(title, description, status):
     item_id = generate_new_todo_id()
     timestamp = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
+    if status:
+        valid_status = ["ToDo", "InProgress", "Done"]
+        if status not in valid_status:
+            return None, f"Invalid status. Must be one of: {', '.join(valid_status)}"
+
     try:
         created_item = repo.create_item(
             item_id=item_id,
