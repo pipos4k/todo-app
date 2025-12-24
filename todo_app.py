@@ -13,7 +13,6 @@ def get_all_items():
     items, error = todo_service.get_todo_by_status_filter(status=status)
 
     if error:
-        # items = todo_service.get_todo_by_status_filter()
         return jsonify({"success": True, "items": items}), 400
     
     return jsonify({"success": True, "items": items}), 200

@@ -3,14 +3,11 @@ from datetime import datetime
 
 def get_todo_by_status_filter(status=None):
     if status:
-        valid_statuses = ["ToDo", "InProgress", "Done"]
-
-        if status not in valid_statuses:        
-            return None, f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
-
+        if not check_status_existence(status=status):
+            return None, "Invalid status."    
+    
         items = repo.get_items_by_status(status)
         return items, None
-    
     else:
         items = repo.get_all_items()
         return items, None
@@ -25,10 +22,8 @@ def create_todo_item(title, description, status):
     item_id = generate_new_todo_id()
     timestamp = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
-    if status:
-        valid_status = ["ToDo", "InProgress", "Done"]
-        if status not in valid_status:
-            return None, f"Invalid status. Must be one of: {', '.join(valid_status)}"
+    if not check_status_existence(status=status):
+        return None, "Invalid status."
 
     try:
         created_item = repo.create_item(
@@ -67,15 +62,20 @@ def delete_todo_item(item_id):
     return item, None
 
 def update_todo_item(item_id, title=None, description=None, status=None):
-    if status:
-        valid_status = ["ToDo", "InProgress", "Done"]
-        if status not in valid_status:
-            return None, f"Invalid status. Must be one of: {', '.join(valid_status)}"
-        
+    if not check_status_existence(status=status):
+        return None, "Invalid status."
+            
     updated_item = repo.update_item(item_id, title, description, status)
 
     if not updated_item:
         return None, "Item not found."
     
     return updated_item, None
-        
+
+def check_status_existence(status):
+    valid_status = ["ToDo", "InProgress", "Done"]
+
+    if status not in valid_status:
+        return False
+    else:
+        return status
