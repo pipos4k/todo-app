@@ -7,3 +7,5 @@ __pycache__/
 
 # App runtime data (only if auto-generated)
 data/
+
+SQLALCHEMY_EXPLANATION
