@@ -1,9 +1,39 @@
-# Python cache
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 
 # Virtual environment
-.venv/
-.env 
+/venv
+/env 
+/ENV
 
-# App runtime data (only if auto-generated)
+# Environment
+.env
+.env.local
+
+# Database
 data/
+*.db
+*.sqlite
+
+# Markdown files
+*.md
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+*.cover
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

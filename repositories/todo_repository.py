@@ -1,108 +1,116 @@
-from database.setup_database import get_db_connection
+from database.models import db, Item
 
-def get_all_items():
-    db_connection = get_db_connection()
-    cursor = db_connection.cursor()
-    cursor.execute("SELECT * FROM items")
-    rows = cursor.fetchall()
-    db_connection.close()
-    return [dict(row) for row in rows]
+ALLOWED_SORT_COLUMNS = ['id', 'title', 'status', 'timestamp']
 
-def get_items_by_status(status):
-    db_connection = get_db_connection()
-    cursor = db_connection.cursor()
-    cursor.execute("SELECT * FROM items WHERE status = %s", (status,))
-    rows = cursor.fetchall()
-    db_connection.close()
-    return [dict(row) for row in rows]
 
-def get_item_by_id(item_id):
-    db_connection = get_db_connection()
-    cursor = db_connection.cursor()
-    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id,))
-    row = cursor.fetchone()
-    db_connection.close()
-    return dict(row) if row else None
-
-def get_all_ids():
-    db_connection = get_db_connection()    
-    cursor = db_connection.cursor()
-    cursor.execute("SELECT id FROM items")
-    ids = cursor.fetchall()
-    db_connection.close()
-    return [dict(row) for row in ids]
-
-def create_item(item_id, title, description, status, timestamp):
-    db_connection = get_db_connection()    
-    cursor = db_connection.cursor()
-
-    cursor.execute('''
-        INSERT INTO items (id, title, description, status, timestamp)
-            VALUES (%s, %s, %s, %s, %s)
-        ''', (item_id, title, description, status, timestamp))
+def get_all_items(user_id=None, sort_by="id", sort_order="asc"):
+    """Retrieve all items with optional filtering and sorting."""
+    query = Item.query
     
-    db_connection.commit()
-    db_connection.close()
-    return {"id": item_id, "title": title, "decription": description,
-            "status": status, "timestamp": timestamp}
-
-def delete_item(item_id):
-    db_connection = get_db_connection()
-    cursor = db_connection.cursor()
-
-    # Check if item exists
-    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
-    row = cursor.fetchone()
-
-    if not row:
-        db_connection.close()
-        return None # Item not found
+    if user_id:
+        query = query.filter_by(user_id=user_id)
     
-    cursor.execute("DELETE FROM items WHERE id = %s", (item_id, ))
-    db_connection.commit()
-    db_connection.close()
+    query = _apply_sorting(query, sort_by, sort_order)
+    return [item.to_dict() for item in query.all()]
 
-    return dict(row)
 
-def update_item(item_id, title=None, description=None, status=None):
-    db_connection = get_db_connection()
-    cursor = db_connection.cursor()
-
-    # Check if item exists
-    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id,))    
-    row = cursor.fetchone()
-
-    if not row:
-        db_connection.close()
-        return None # Item not found
+def get_items_by_status(status, user_id=None, sort_by="id", sort_order="asc"):
+    """Retrieve items filtered by status."""
+    query = Item.query.filter_by(status=status)
     
-    updates = []
-    params = []
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    
+    query = _apply_sorting(query, sort_by, sort_order)
+    return [item.to_dict() for item in query.all()]
 
+
+def get_item_by_id(item_id, user_id=None):
+    """Retrieve single item by ID."""
+    query = Item.query.filter_by(id=item_id)
+    
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    
+    item = query.first()
+    return item.to_dict() if item else None
+
+
+def get_all_ids(user_id=None):
+    """Retrieve all item IDs."""
+    query = Item.query.with_entities(Item.id)
+    
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    
+    return [{'id': item_id[0]} for item_id in query.all()]
+
+
+def create_item(item_id, title, description, status, timestamp, user_id):
+    """Create new item."""
+    try:
+        item = Item(
+            id=item_id,
+            title=title,
+            description=description,
+            status=status,
+            timestamp=timestamp,
+            user_id=user_id
+        )
+        db.session.add(item)
+        db.session.commit()
+        return item.to_dict()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
+
+def delete_item(item_id, user_id=None):
+    """Delete item."""
+    query = Item.query.filter_by(id=item_id)
+    
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    
+    item = query.first()
+    if not item:
+        return None
+    
+    item_dict = item.to_dict()
+    db.session.delete(item)
+    db.session.commit()
+    return item_dict
+
+
+def update_item(item_id, title=None, description=None, status=None, user_id=None):
+    """Update item."""
+    query = Item.query.filter_by(id=item_id)
+    
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    
+    item = query.first()
+    if not item:
+        return None
+    
     if title is not None:
-        updates.append("title = %s")
-        params.append(title)
-
+        item.title = title
     if description is not None:
-        updates.append("description = %s")
-        params.append(description)
-
+        item.description = description
     if status is not None:
-        updates.append("status = %s")
-        params.append(status)
-
-    if not updates:
-        db_connection.close()
-        return dict(row)
+        item.status = status
     
-    params.append(item_id)
+    db.session.commit()
+    return item.to_dict()
 
-    query = f"UPDATE items SET {', '.join(updates)} WHERE id = %s"
-    cursor.execute(query, params)
-    db_connection.commit()
+
+def _apply_sorting(query, sort_by, sort_order):
+    """Apply sorting to query."""
+    if sort_by not in ALLOWED_SORT_COLUMNS:
+        sort_by = "id"
     
-    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id, ))
-    updated_item = cursor.fetchone()
-    db_connection.close()
-
-    return dict(updated_item)
+    sort_column = getattr(Item, sort_by)
+    
+    if sort_order.lower() == "desc":
+        return query.order_by(sort_column.desc())
+    return query.order_by(sort_column.asc())
