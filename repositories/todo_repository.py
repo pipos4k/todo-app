@@ -1,75 +1,53 @@
 from database.models import db, Item
 
+ALLOWED_SORT_COLUMNS = ['id', 'title', 'status', 'timestamp']
+
+
 def get_all_items(user_id=None, sort_by="id", sort_order="asc"):
-    """
-    Get all items, optionally filtered by user_id.
-    Supports sorting by: id, title, status, timestamp
-    
-    Flask-SQLAlchemy provides Item.query directly!
-    """
+    """Retrieve all items with optional filtering and sorting."""
     query = Item.query
+    
     if user_id:
         query = query.filter_by(user_id=user_id)
     
-    # Apply sorting
-    sort_column = getattr(Item, sort_by, None)
-    if sort_column:
-        if sort_order.lower() == "desc":
-            query = query.order_by(sort_column.desc())
-        else:
-            query = query.order_by(sort_column.asc())
-    else:
-        # Default sort by id if invalid column
-        query = query.order_by(Item.id.asc())
-    
-    items = query.all()
-    return [item.to_dict() for item in items]
+    query = _apply_sorting(query, sort_by, sort_order)
+    return [item.to_dict() for item in query.all()]
+
 
 def get_items_by_status(status, user_id=None, sort_by="id", sort_order="asc"):
-    """
-    Get items by status, optionally filtered by user.
-    Supports sorting by: id, title, status, timestamp
-    """
+    """Retrieve items filtered by status."""
     query = Item.query.filter_by(status=status)
+    
     if user_id:
         query = query.filter_by(user_id=user_id)
     
-    # Apply sorting
-    sort_column = getattr(Item, sort_by, None)
-    if sort_column:
-        if sort_order.lower() == "desc":
-            query = query.order_by(sort_column.desc())
-        else:
-            query = query.order_by(sort_column.asc())
-    else:
-        # Default sort by id if invalid column
-        query = query.order_by(Item.id.asc())
-    
-    items = query.all()
-    return [item.to_dict() for item in items]
+    query = _apply_sorting(query, sort_by, sort_order)
+    return [item.to_dict() for item in query.all()]
+
 
 def get_item_by_id(item_id, user_id=None):
-    """
-    Get item by ID, optionally verifying it belongs to user.
-    """
+    """Retrieve single item by ID."""
     query = Item.query.filter_by(id=item_id)
+    
     if user_id:
         query = query.filter_by(user_id=user_id)
+    
     item = query.first()
     return item.to_dict() if item else None
 
+
 def get_all_ids(user_id=None):
-    """Get all item IDs, optionally filtered by user"""
+    """Retrieve all item IDs."""
     query = Item.query.with_entities(Item.id)
+    
     if user_id:
         query = query.filter_by(user_id=user_id)
-    ids = query.all()
-    return [{'id': item_id[0]} for item_id in ids]
+    
+    return [{'id': item_id[0]} for item_id in query.all()]
+
 
 def create_item(item_id, title, description, status, timestamp, user_id):
-    """
-    Create a new item using ORM.
-    """
+    """Create new item."""
     try:
         item = Item(
             id=item_id,
@@ -86,15 +64,15 @@ def create_item(item_id, title, description, status, timestamp, user_id):
         db.session.rollback()
         raise e
 
+
 def delete_item(item_id, user_id=None):
-    """
-    Delete an item using ORM.
-    """
+    """Delete item."""
     query = Item.query.filter_by(id=item_id)
+    
     if user_id:
         query = query.filter_by(user_id=user_id)
-    item = query.first()
     
+    item = query.first()
     if not item:
         return None
     
@@ -103,15 +81,15 @@ def delete_item(item_id, user_id=None):
     db.session.commit()
     return item_dict
 
+
 def update_item(item_id, title=None, description=None, status=None, user_id=None):
-    """
-    Update an item using ORM.
-    """
+    """Update item."""
     query = Item.query.filter_by(id=item_id)
+    
     if user_id:
         query = query.filter_by(user_id=user_id)
-    item = query.first()
     
+    item = query.first()
     if not item:
         return None
     
@@ -124,3 +102,15 @@ def update_item(item_id, title=None, description=None, status=None, user_id=None
     
     db.session.commit()
     return item.to_dict()
+
+
+def _apply_sorting(query, sort_by, sort_order):
+    """Apply sorting to query."""
+    if sort_by not in ALLOWED_SORT_COLUMNS:
+        sort_by = "id"
+    
+    sort_column = getattr(Item, sort_by)
+    
+    if sort_order.lower() == "desc":
+        return query.order_by(sort_column.desc())
+    return query.order_by(sort_column.asc())
