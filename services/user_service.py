@@ -1,109 +1,165 @@
-from repositories import user_repository as repo
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from typing import Optional, Tuple, Dict, Any
+import jwt
 import bcrypt
 import re
+import logging
+import uuid
+
+from repositories import user_repository as repo
+
+logger = logging.getLogger(__name__)
 
 EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-MIN_PASSWORD_LENGTH = 6
+MIN_PASSWORD_LENGTH = 2
 
+JWT_SECRET = "YOUR_SECRET_KEY"
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = 24
 
-def register_user(email, password):
-    """Register a new user with validation."""
-    if not email or not email.strip():
-        return None, "Email is required."
-    
-    if not password:
-        return None, "Password is required."
-    
-    email = email.strip().lower()
-    
-    if not _is_valid_email(email):
-        return None, "Invalid email format."
-    
-    if not _is_valid_password(password):
-        return None, f"Password must be at least {MIN_PASSWORD_LENGTH} characters long."
-    
-    if repo.email_exists(email):
-        return None, "Email already registered."
-    
-    user_id = _generate_unique_user_id()
-    if not user_id:
-        return None, "Failed to generate user ID."
+def register_user(email: str,
+                  password: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     
     try:
+        normalized_email, error = _check_email_validation(email)
+        if error:
+            return None, error
+
+        if not password:
+            return None, "Password is required."
+
+        if not _is_valid_password(password):
+            return None, f"Password must be at least {MIN_PASSWORD_LENGTH} characters long."
+
+        email = normalized_email
+        user_id = str(uuid.uuid4())        
+        password = _hash_password(password)
+        created_at = datetime.now(timezone.utc)
+
         created_user = repo.create_user(
             user_id=user_id,
             email=email,
-            password_hash=_hash_password(password),
-            created_at=datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+            password_hash=password,
+            created_at=created_at
         )
+        logger.info(f"New user registered: {email}")
         return created_user, None
+    
     except Exception as e:
-        return None, f"Failed to create user: {str(e)}"
+        logger.error(f"Error in register_user for email '{email}': {str(e)}")
+        return None, f"Failed to register user: {str(e)}"
 
 
-def authenticate_user(email, password):
-    """Authenticate user credentials."""
-    if not email or not password:
-        return None, "Email and password are required."
+def authenticate_user(email: str, 
+                      password: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    try:
+        if not email or not password:
+            return None, "Email and password are required."
+
+        email = email.strip().lower()
+        user = repo.get_user_with_password(email)
+
+        if not user:
+            logger.warning(f"Authentication failed. no user: {email}")
+            return None, "Invalid email or password."
+
+        if not _verify_password(password, user["password_hash"]):
+            return None, "Invalid email or password."
+
+        token_payload = {
+            "user_id": user["id"],
+            "exp": datetime.now(timezone.utc) + timedelta(hours= JWT_EXPIRATION_HOURS)
+        }
+        
+        token = jwt.encode(token_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        logger.info(f"User authenticated successfully: {email}")
+
+        return {
+            "user info":{
+                "id": user["id"],
+                "email": user["email"]
+            },
+            "token": token
+        }, None
+        
+    except Exception as e:
+        logger.error(f"Error in authenticate_user for email: '{email}': {str(e)}")
+        return None, f"Failed to authenticate user: {str(e)}"
+
+
+def get_user(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    try:
+        if not user_id:
+            return None, "User ID is required."
+
+        user = repo.get_user_by_id(user_id)
+
+        return (user, None) if user else (None, "User not found")
     
-    email = email.strip().lower()
+    except Exception as e: 
+        logger.error(f"Error in get_user for user_id '{user_id}': {str(e)}")
+        return None, f"Failed to get user: {str(e)}"
+
+
+def decode_auth_token(auth_header: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+
+    try:
+        if not auth_header or ' ' not in auth_header:
+            return None, "Invalid token format"
+
+        token_parts = auth_header.split(" ")
+        if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
+            return None, "Invalid token format. Expected 'Bearer <token>'."
+
+        token = token_parts[1]
+
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+
+        if not user_id:
+            return None, "Invalid token: missing user_id."
+
+        logger.debug(f"Token decoded successfully for user_id '{user_id}'")
+        return user_id, None 
     
-    user = repo.get_user_with_password(email)
-    if not user:
-        return None, "Invalid email or password."
+    except jwt.ExpiredSignatureError:
+        logger.warning(f"Token expired!: {str(jwt.ExpiredSignatureError)}")
+        return None, "Token expired. Please login again."
     
-    if not _verify_password(password, user["password_hash"]):
-        return None, "Invalid email or password."
+    except jwt.InvalidTokenError as invalid:
+        logger.warning(f"Invalid token: {str(invalid)}")
+        return None, f"Invalid token: {str(invalid)}"
+    except Exception as e:
+        logger.warning(f"Error: {str(e)}")
+        return None, f"Error: {str(e)}"
+
+
+def _check_email_validation(email: str) -> Tuple[Optional[str], Optional[str]]:
+
+    if not email or not email.strip():
+        return None, "Email is required."
     
-    return {
-        "id": user["id"],
-        "email": user["email"],
-        "created_at": user["created_at"]
-    }, None
-
-
-def get_user(user_id):
-    """Retrieve user by ID."""
-    if not user_id:
-        return None, "User ID is required."
+    normalized_email = email.strip().lower()        
     
-    user = repo.get_user_by_id(user_id)
-    return (user, None) if user else (None, "User not found")
-
-
-def _generate_unique_user_id():
-    """Generate unique user ID."""
-    user_ids = repo.get_all_user_ids()
-    existing_numbers = []
+    if not bool(re.match(EMAIL_PATTERN, normalized_email)):
+        return None, "Invalid email format."    
     
-    for item in user_ids:
-        user_id = item.get("id", "")
-        if "_" in user_id:
-            try:
-                existing_numbers.append(int(user_id.split("_")[1]))
-            except (IndexError, ValueError):
-                continue
+    if repo.email_exists(normalized_email):
+        return None, "Email already registered."
     
-    next_number = max(existing_numbers) + 1 if existing_numbers else 1
-    return f"user_{next_number}"
+    return normalized_email, None
+    
 
-
-def _is_valid_email(email):
-    """Validate email format using regex."""
-    return bool(re.match(EMAIL_PATTERN, email))
-
-
-def _is_valid_password(password):
-    """Validate password meets minimum requirements."""
+def _is_valid_password(password: str) -> bool:
+    
     return len(password) >= MIN_PASSWORD_LENGTH
 
 
-def _hash_password(password):
-    """Hash password using bcrypt."""
+def _hash_password(password: str) -> str:
+    
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
-def _verify_password(password, password_hash):
-    """Verify password matches hash."""
+def _verify_password(password: str, password_hash: str) -> bool:
+    
     return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))

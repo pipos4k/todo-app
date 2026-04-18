@@ -4,19 +4,19 @@ ALLOWED_SORT_COLUMNS = ['id', 'email', 'created_at']
 
 
 def get_user_by_id(user_id):
-    """Retrieve user by ID."""
+    
     user = User.query.filter_by(id=user_id).first()
     return user.to_dict() if user else None
 
 
 def get_user_by_email(email):
-    """Retrieve user by email."""
+    
     user = User.query.filter_by(email=email).first()
     return user.to_dict() if user else None
 
 
 def get_user_with_password(email):
-    """Retrieve user with password hash for authentication."""
+
     user = User.query.filter_by(email=email).first()
     if not user:
         return None
@@ -30,13 +30,13 @@ def get_user_with_password(email):
 
 
 def get_all_user_ids():
-    """Retrieve all user IDs."""
+
     users = User.query.with_entities(User.id).all()
     return [{'id': user_id[0]} for user_id in users]
 
 
 def create_user(user_id, email, password_hash, created_at):
-    """Create new user."""
+
     try:
         user = User(
             id=user_id,
@@ -53,5 +53,4 @@ def create_user(user_id, email, password_hash, created_at):
 
 
 def email_exists(email):
-    """Check if email already exists."""
     return User.query.filter_by(email=email).count() > 0

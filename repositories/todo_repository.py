@@ -2,9 +2,8 @@ from database.models import db, Item
 
 ALLOWED_SORT_COLUMNS = ['id', 'title', 'status', 'timestamp']
 
-
 def get_all_items(user_id=None, sort_by="id", sort_order="asc"):
-    """Retrieve all items with optional filtering and sorting."""
+
     query = Item.query
     
     if user_id:
@@ -15,7 +14,7 @@ def get_all_items(user_id=None, sort_by="id", sort_order="asc"):
 
 
 def get_items_by_status(status, user_id=None, sort_by="id", sort_order="asc"):
-    """Retrieve items filtered by status."""
+
     query = Item.query.filter_by(status=status)
     
     if user_id:
@@ -26,7 +25,7 @@ def get_items_by_status(status, user_id=None, sort_by="id", sort_order="asc"):
 
 
 def get_item_by_id(item_id, user_id=None):
-    """Retrieve single item by ID."""
+
     query = Item.query.filter_by(id=item_id)
     
     if user_id:
@@ -37,7 +36,7 @@ def get_item_by_id(item_id, user_id=None):
 
 
 def get_all_ids(user_id=None):
-    """Retrieve all item IDs."""
+
     query = Item.query.with_entities(Item.id)
     
     if user_id:
@@ -47,7 +46,7 @@ def get_all_ids(user_id=None):
 
 
 def create_item(item_id, title, description, status, timestamp, user_id):
-    """Create new item."""
+    
     try:
         item = Item(
             id=item_id,
@@ -66,7 +65,7 @@ def create_item(item_id, title, description, status, timestamp, user_id):
 
 
 def delete_item(item_id, user_id=None):
-    """Delete item."""
+
     query = Item.query.filter_by(id=item_id)
     
     if user_id:
@@ -83,7 +82,7 @@ def delete_item(item_id, user_id=None):
 
 
 def update_item(item_id, title=None, description=None, status=None, user_id=None):
-    """Update item."""
+
     query = Item.query.filter_by(id=item_id)
     
     if user_id:
@@ -105,7 +104,7 @@ def update_item(item_id, title=None, description=None, status=None, user_id=None
 
 
 def _apply_sorting(query, sort_by, sort_order):
-    """Apply sorting to query."""
+
     if sort_by not in ALLOWED_SORT_COLUMNS:
         sort_by = "id"
     
