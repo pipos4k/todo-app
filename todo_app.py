@@ -13,11 +13,13 @@ setup_database.init_db(application)
 
 @application.route("/")
 def index():
+
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
 
 
-@application.route("/items", methods=["GET"])
+@application.route("/user/items", methods=["GET"])
 def get_items():
+
     try:
         user_id = _extract_user_id()
         if not user_id:
@@ -35,8 +37,9 @@ def get_items():
         return _handle_exception(e, "get_items")
 
 
-@application.route("/items/<item_id>", methods=["GET"])
+@application.route("/user/items/<item_id>", methods=["GET"])
 def get_item(item_id):
+
     try:
         user_id = _extract_user_id()
         if not user_id:
@@ -50,8 +53,9 @@ def get_item(item_id):
         return _handle_exception(e, "get_item")
 
 
-@application.route("/post_item", methods=["POST"])
+@application.route("/user/items", methods=["POST"])
 def create_item():
+
     try:
         user_id = _extract_user_id()
         if not user_id:
@@ -74,8 +78,9 @@ def create_item():
         return _handle_exception(e, "create_item")
 
 
-@application.route("/items/<item_id>", methods=["DELETE"])
+@application.route("/user/items/<item_id>", methods=["DELETE"])
 def delete_item(item_id):
+
     try:
         user_id = _extract_user_id()
         if not user_id:
@@ -89,8 +94,9 @@ def delete_item(item_id):
         return _handle_exception(e, "delete_item")
 
 
-@application.route("/items/<item_id>", methods=["PUT"])
+@application.route("/user/items/<item_id>", methods=["PUT"])
 def update_item(item_id):
+    
     try:
         user_id = _extract_user_id()
         if not user_id:
@@ -116,6 +122,7 @@ def update_item(item_id):
 
 @application.route("/register", methods=["POST"])
 def register():
+
     try:
         data = request.get_json()
         if not data:
@@ -134,6 +141,7 @@ def register():
 
 @application.route("/login", methods=["POST"])
 def login():
+
     try:
         data = request.get_json()
         if not data:
@@ -150,8 +158,9 @@ def login():
         return _handle_exception(e, "login")
 
 
-@application.route("/users/<user_id>", methods=["GET"])
+@application.route("/user/<user_id>", methods=["GET"])
 def get_user(user_id):
+
     try:
         user, error = user_service.get_user(user_id)
         
@@ -161,32 +170,45 @@ def get_user(user_id):
         return _handle_exception(e, "get_user")
 
 
+@application.route("/get_user_id", methods=["GET"])
 def _extract_user_id():
-    """Extract user ID from request headers or body."""
-    user_id = request.headers.get('X-User-ID')
-    if not user_id:
-        data = request.get_json() or {}
-        user_id = data.get('user_id')
-    return user_id
 
+    try:
+        auth_header = request.headers.get("Authorization")
+
+        user_id, error = user_service.decode_auth_token(auth_header)
+
+        if error:
+            return _error_response(error, 401)
+        
+        user, user_error = user_service.get_user(user_id)
+
+        if user_error:
+            return _error_response(user_error, "404")
+        
+        return user["id"]
+    
+    except Exception as e:
+        return _handle_exception(e, "get_jwt_user")
+    
 
 def _success_response(data, status_code=200):
-    """Create standardized success response."""
+    
     return jsonify({"success": True, **data}), status_code
 
 
 def _error_response(error_message, status_code=400):
-    """Create standardized error response."""
+
     return jsonify({"success": False, "error": error_message}), status_code
 
 
-def _unauthorized_response():
-    """Create unauthorized response."""
+def _unauthorized_response(): 
+
     return _error_response("User authentication required. Please login.", 401)
 
 
 def _handle_exception(exception, route_name):
-    """Handle and log exceptions."""
+    
     print(f"Error in {route_name} route: {str(exception)}")
     print(traceback.format_exc())
     return _error_response(f"Server error: {str(exception)}", 500)
