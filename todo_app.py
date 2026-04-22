@@ -1,27 +1,42 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from database import setup_database
-from services import todo_service, user_service
 import os
 import traceback
+import sys
+import logging
+
+from database import setup_database
+from services import todo_service, user_service
+from services.auth_decorators import token_required
 
 application = Flask(__name__)
 CORS(application)
 
 setup_database.init_db(application)
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout) 
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
 
 @application.route("/")
 def index():
-
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
 
 
 @application.route("/user/items", methods=["GET"])
-def get_items():
+@token_required
+def get_items(current_user):
 
     try:
-        user_id = _extract_user_id()
+        user_id = current_user["id"]
+        logger.info(f"User ID: {user_id}")
         if not user_id:
             return _unauthorized_response()
         
@@ -38,10 +53,11 @@ def get_items():
 
 
 @application.route("/user/items/<item_id>", methods=["GET"])
-def get_item(item_id):
+@token_required
+def get_item(current_user, item_id):
 
     try:
-        user_id = _extract_user_id()
+        user_id = current_user["id"]
         if not user_id:
             return _unauthorized_response()
         
@@ -54,10 +70,11 @@ def get_item(item_id):
 
 
 @application.route("/user/items", methods=["POST"])
-def create_item():
+@token_required
+def create_item(current_user):
 
     try:
-        user_id = _extract_user_id()
+        user_id = current_user["id"]
         if not user_id:
             return _unauthorized_response()
         
@@ -79,10 +96,11 @@ def create_item():
 
 
 @application.route("/user/items/<item_id>", methods=["DELETE"])
-def delete_item(item_id):
+@token_required
+def delete_item(current_user ,item_id):
 
     try:
-        user_id = _extract_user_id()
+        user_id = current_user["id"]
         if not user_id:
             return _unauthorized_response()
         
@@ -95,10 +113,11 @@ def delete_item(item_id):
 
 
 @application.route("/user/items/<item_id>", methods=["PUT"])
-def update_item(item_id):
+@token_required
+def update_item(current_user, item_id):
     
     try:
-        user_id = _extract_user_id()
+        user_id = current_user["id"]
         if not user_id:
             return _unauthorized_response()
         
@@ -124,6 +143,7 @@ def update_item(item_id):
 def register():
 
     try:
+        logger.info("TestLogger")
         data = request.get_json()
         if not data:
             return _error_response("No data provided.")
@@ -168,28 +188,6 @@ def get_user(user_id):
                 else _error_response(error, 404))
     except Exception as e:
         return _handle_exception(e, "get_user")
-
-
-@application.route("/get_user_id", methods=["GET"])
-def _extract_user_id():
-
-    try:
-        auth_header = request.headers.get("Authorization")
-
-        user_id, error = user_service.decode_auth_token(auth_header)
-
-        if error:
-            return _error_response(error, 401)
-        
-        user, user_error = user_service.get_user(user_id)
-
-        if user_error:
-            return _error_response(user_error, "404")
-        
-        return user["id"]
-    
-    except Exception as e:
-        return _handle_exception(e, "get_jwt_user")
     
 
 def _success_response(data, status_code=200):
@@ -209,8 +207,8 @@ def _unauthorized_response():
 
 def _handle_exception(exception, route_name):
     
-    print(f"Error in {route_name} route: {str(exception)}")
-    print(traceback.format_exc())
+    logger.error(f"Error in {route_name} route: {str(exception)}")
+    logger.error(traceback.format_exc())
     return _error_response(f"Server error: {str(exception)}", 500)
 
 

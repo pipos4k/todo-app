@@ -5,15 +5,16 @@ import bcrypt
 import re
 import logging
 import uuid
+import os 
 
 from repositories import user_repository as repo
 
 logger = logging.getLogger(__name__)
-
+ 
 EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 MIN_PASSWORD_LENGTH = 2
 
-JWT_SECRET = "YOUR_SECRET_KEY"
+JWT_SECRET = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
@@ -102,7 +103,7 @@ def get_user(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
 
 
 def decode_auth_token(auth_header: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
-
+    #! MALLON THELEI ALLAGH SAN ONOMA! DEN KANEI DECODE APLA EPISTREFEI TO USER_ID
     try:
         if not auth_header or ' ' not in auth_header:
             return None, "Invalid token format"
