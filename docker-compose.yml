@@ -8,11 +8,10 @@ services:
     volumes:
       - .:/app
       - /app/__pycache__
+    env_file:
+      - .env
     environment:
-      - FLASK_ENV=${FLASK_ENV}
-      - FLASK_DEBUG=${FLASK_DEBUG}
-      - DATABASE_URL=${DATABASE_URL}
-      - SECRET_KEY=${SECRET_KEY}
+      - PYTHONUNBUFFERED=1
     depends_on:
       - db
     restart: unless-stopped
@@ -24,7 +23,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      - "${DB_PORT}:5432"
+      - ${DB_PORT}:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
