@@ -35,7 +35,7 @@ def token_required(f):
             current_user_id, error = user_service.get_user(current_user_id)
 
             if error or not current_user_id:
-                logger.error("")
+                logger.error("Invalid token: user not found.")
                 return jsonify({"message": "Invalid token: user not found!"}), 401
                         
         except jwt.ExpiredSignatureError:

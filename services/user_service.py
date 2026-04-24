@@ -89,6 +89,7 @@ def authenticate_user(email: str,
 
 
 def get_user(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+
     try:
         if not user_id:
             return None, "User ID is required."
@@ -100,39 +101,6 @@ def get_user(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     except Exception as e: 
         logger.error(f"Error in get_user for user_id '{user_id}': {str(e)}")
         return None, f"Failed to get user: {str(e)}"
-
-
-def decode_auth_token(auth_header: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
-    #! MALLON THELEI ALLAGH SAN ONOMA! DEN KANEI DECODE APLA EPISTREFEI TO USER_ID
-    try:
-        if not auth_header or ' ' not in auth_header:
-            return None, "Invalid token format"
-
-        token_parts = auth_header.split(" ")
-        if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
-            return None, "Invalid token format. Expected 'Bearer <token>'."
-
-        token = token_parts[1]
-
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user_id = payload.get("user_id")
-
-        if not user_id:
-            return None, "Invalid token: missing user_id."
-
-        logger.debug(f"Token decoded successfully for user_id '{user_id}'")
-        return user_id, None 
-    
-    except jwt.ExpiredSignatureError:
-        logger.warning(f"Token expired!: {str(jwt.ExpiredSignatureError)}")
-        return None, "Token expired. Please login again."
-    
-    except jwt.InvalidTokenError as invalid:
-        logger.warning(f"Invalid token: {str(invalid)}")
-        return None, f"Invalid token: {str(invalid)}"
-    except Exception as e:
-        logger.warning(f"Error: {str(e)}")
-        return None, f"Error: {str(e)}"
 
 
 def _check_email_validation(email: str) -> Tuple[Optional[str], Optional[str]]:

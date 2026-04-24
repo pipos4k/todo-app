@@ -6,7 +6,7 @@ import sys
 import logging
 
 from database import setup_database
-from services import todo_service, user_service
+from services import todo_service, user_service, validator_service
 from services.auth_decorators import token_required
 
 application = Flask(__name__)
@@ -79,6 +79,12 @@ def create_item(current_user):
             return _unauthorized_response()
         
         data = request.get_json()
+
+        validation_error = validator_service.validate_todo_item_data(data)
+        if validation_error:
+            logger.error(f"Wrong validation: {validation_error}")
+            return _error_response(validation_error)
+        
         if not data:
             return _error_response("No data provided.")
         
@@ -122,6 +128,12 @@ def update_item(current_user, item_id):
             return _unauthorized_response()
         
         data = request.get_json()
+
+        validation_error = validator_service.validate_todo_item_data(data, is_update=True)
+        if validation_error:
+            logger.error(f"Wrong validation: {validation_error}")
+            return _error_response(validation_error)
+
         if not data:
             return _error_response("No data provided.")
         
@@ -143,8 +155,12 @@ def update_item(current_user, item_id):
 def register():
 
     try:
-        logger.info("TestLogger")
         data = request.get_json()
+
+        validation_error = validator_service.validate_user_registration_data(data)
+        if validation_error:
+            return _error_response(validation_error)
+
         if not data:
             return _error_response("No data provided.")
         
@@ -164,8 +180,13 @@ def login():
 
     try:
         data = request.get_json()
+
         if not data:
             return _error_response("No data provided.")
+        
+        validation_error = validator_service.validate_user_login_data(data)
+        if validation_error:
+            return _error_response(validation_error, 402)
         
         user, error = user_service.authenticate_user(
             email=data.get("email"),
@@ -179,13 +200,15 @@ def login():
 
 
 @application.route("/user/<user_id>", methods=["GET"])
-def get_user(user_id):
+@token_required
+def get_user(current_user, user_id):
 
     try:
-        user, error = user_service.get_user(user_id)
+        current_user, error = user_service.get_user(user_id)
         
-        return (_success_response({"user": user}) if not error 
+        return (_success_response({"user": current_user}) if not error 
                 else _error_response(error, 404))
+    
     except Exception as e:
         return _handle_exception(e, "get_user")
     
