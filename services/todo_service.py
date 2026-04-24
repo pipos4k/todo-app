@@ -62,8 +62,8 @@ def create_todo(title: str,
 
         todo_id = str(uuid.uuid4())
         title = title.strip()
-        description=description.strip() if description else "",
-        status=status or "ToDo",
+        description=description.strip() if description else ""
+        status=status or "ToDo"
         timestamp = datetime.now(timezone.utc)
 
         created_item = repo.create_item(
@@ -105,10 +105,11 @@ def update_todo(item_id: str,
                 user_id: Optional[str] = None) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
 
     try:
+
         if not item_id or not item_id.strip():
             return None, "Item ID is required."
 
-        if not _is_valid_status(status):
+        if not _is_valid_status(status) and status != None:
             return None, "Invalid status."
 
         if title is not None:
