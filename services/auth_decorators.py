@@ -23,8 +23,8 @@ def token_required(f):
         
         parts = auth_header.split()
         if parts[0].lower() != "bearer" or len(parts) != 2:
-            logger.error("Error with token format. Expected 'Bearer <token>.")
-            return jsonify({"message": "Invalid token format. Expected 'Bearer <token>'."}), 401
+            logger.error("Error with token format. Expected Bearer <token>.")
+            return jsonify({"message": "Invalid token format. Expected Bearer <token>."}), 401
         
         token = parts[1]
         
@@ -32,9 +32,9 @@ def token_required(f):
             data = jwt.decode(token, JWT_SECRET, algorithms=JWT_ALGORITHM)
 
             current_user_id = data["user_id"]
-            current_user_id, error = user_service.get_user(current_user_id)
+            user_result, error = user_service.get_user(current_user_id)
 
-            if error or not current_user_id:
+            if error or not user_result:
                 logger.error("Invalid token: user not found.")
                 return jsonify({"message": "Invalid token: user not found!"}), 401
                         
@@ -46,8 +46,8 @@ def token_required(f):
             return jsonify({"message": "Token is invalid!"}), 401
         except Exception as e:
             logger.error(f"Token validation error: {str(e)}")
-            return jsonify({'message': 'Token validation failed!'}), 401
+            return jsonify({"message": "Token validation failed!"}), 401
         
-        return f(current_user_id, *args, **kwargs)
+        return f(user_result, *args, **kwargs)
     
     return decorated

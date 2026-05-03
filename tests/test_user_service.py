@@ -8,7 +8,7 @@ class TestUserRegistration:
     
     def test_register_with_valid_data(self):
         """Should successfully register user with valid email and password."""
-        with patch('services.user_service.repo') as mock_repo:
+        with patch("services.user_service.repo") as mock_repo:
             mock_repo.email_exists.return_value = False
             mock_repo.get_all_user_ids.return_value = []
             mock_repo.create_user.return_value = {"id": "user_1", "email": "test@example.com"}
@@ -42,7 +42,7 @@ class TestUserRegistration:
     
     def test_register_with_existing_email(self):
         """Should reject registration with already registered email."""
-        with patch('services.user_service.repo') as mock_repo:
+        with patch("services.user_service.repo") as mock_repo:
             mock_repo.email_exists.return_value = True
             
             user, error = user_service.register_user("test@example.com", "password123")
@@ -56,7 +56,7 @@ class TestUserAuthentication:
     
     def test_authenticate_with_valid_credentials(self):
         """Should successfully authenticate with correct credentials."""
-        with patch('services.user_service.repo') as mock_repo:
+        with patch("services.user_service.repo") as mock_repo:
             hashed = user_service._hash_password("password123")
             mock_repo.get_user_with_password.return_value = {
                 "id": "user_1",
@@ -74,7 +74,7 @@ class TestUserAuthentication:
     
     def test_authenticate_with_wrong_password(self):
         """Should reject authentication with incorrect password."""
-        with patch('services.user_service.repo') as mock_repo:
+        with patch("services.user_service.repo") as mock_repo:
             hashed = user_service._hash_password("correctpassword")
             mock_repo.get_user_with_password.return_value = {
                 "id": "user_1",
@@ -90,7 +90,7 @@ class TestUserAuthentication:
     
     def test_authenticate_with_nonexistent_email(self):
         """Should reject authentication for non-existent user."""
-        with patch('services.user_service.repo') as mock_repo:
+        with patch("services.user_service.repo") as mock_repo:
             mock_repo.get_user_with_password.return_value = None
             
             user, error = user_service.authenticate_user("nonexistent@example.com", "password123")

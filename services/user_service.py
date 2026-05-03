@@ -11,7 +11,7 @@ from repositories import user_repository as repo
 
 logger = logging.getLogger(__name__)
  
-EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 MIN_PASSWORD_LENGTH = 2
 
 JWT_SECRET = os.getenv("JWT_SECRET_KEY")
@@ -126,9 +126,9 @@ def _is_valid_password(password: str) -> bool:
 
 def _hash_password(password: str) -> str:
     
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def _verify_password(password: str, password_hash: str) -> bool:
     
-    return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+    return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))

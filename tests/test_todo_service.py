@@ -8,7 +8,7 @@ class TestTodoCreation:
     
     def test_create_with_valid_data(self):
         """Should successfully create todo with valid data."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.get_all_ids.return_value = []
             mock_repo.get_item_by_id.return_value = None
             mock_repo.create_item.return_value = {
@@ -53,7 +53,7 @@ class TestTodoCreation:
     
     def test_create_with_default_status(self):
         """Should use default status when not provided."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.get_all_ids.return_value = []
             mock_repo.get_item_by_id.return_value = None
             mock_repo.create_item.return_value = {
@@ -75,7 +75,7 @@ class TestTodoRetrieval:
     
     def test_get_todo_by_id(self):
         """Should retrieve todo by ID."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.get_item_by_id.return_value = {
                 "id": "item_1",
                 "title": "Test Task"
@@ -88,7 +88,7 @@ class TestTodoRetrieval:
     
     def test_get_nonexistent_todo(self):
         """Should handle retrieval of non-existent todo."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.get_item_by_id.return_value = None
             
             item, error = todo_service.get_todo("item_999", "user_1")
@@ -109,7 +109,7 @@ class TestTodoUpdate:
     
     def test_update_with_valid_data(self):
         """Should successfully update todo."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.update_item.return_value = {
                 "id": "item_1",
                 "title": "Updated Task"
@@ -136,7 +136,7 @@ class TestTodoUpdate:
     
     def test_update_nonexistent_todo(self):
         """Should handle update of non-existent todo."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.update_item.return_value = None
             
             item, error = todo_service.update_todo("item_999", "Updated", None, None, "user_1")
@@ -150,7 +150,7 @@ class TestTodoDeletion:
     
     def test_delete_existing_todo(self):
         """Should successfully delete existing todo."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.delete_item.return_value = {"id": "item_1"}
             
             item, error = todo_service.delete_todo("item_1", "user_1")
@@ -160,7 +160,7 @@ class TestTodoDeletion:
     
     def test_delete_nonexistent_todo(self):
         """Should handle deletion of non-existent todo."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.delete_item.return_value = None
             
             item, error = todo_service.delete_todo("item_999", "user_1")
@@ -197,7 +197,7 @@ class TestIdGeneration:
     
     def test_generate_first_id(self):
         """Should generate item_1 for first item."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.get_all_ids.return_value = []
             mock_repo.get_item_by_id.return_value = None
             
@@ -207,7 +207,7 @@ class TestIdGeneration:
     
     def test_generate_incremental_id(self):
         """Should generate next sequential ID."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.get_all_ids.return_value = [
                 {"id": "item_1"},
                 {"id": "item_2"}
@@ -220,7 +220,7 @@ class TestIdGeneration:
     
     def test_generate_id_skips_existing(self):
         """Should skip existing IDs when generating new ID."""
-        with patch('services.todo_service.repo') as mock_repo:
+        with patch("services.todo_service.repo") as mock_repo:
             mock_repo.get_all_ids.return_value = [{"id": "item_1"}]
             
             call_count = [0]

@@ -5,7 +5,7 @@ from sqlalchemy import text, inspect
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set!")
@@ -20,7 +20,7 @@ def migrate_add_user_id_column(app) -> bool:
                 logger.info("Items table doesn't exist yet, will be created by create_all()")
                 return True
                 
-            columns = [col['name'] for col in inspector.get_columns('items')]
+            columns = [col["name"] for col in inspector.get_columns("items")]
             if "user_id" in columns:
                 logger.info("user_id column already exists in table.")
                 return True
@@ -60,13 +60,11 @@ def migrate_add_user_id_column(app) -> bool:
 def init_db(app) -> None:
 
     # Configure Flask app to use the database
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
-    # Initialize SQLAlchemy with the Flask app
     db.init_app(app)
     
-    # Create all tables defined in models
     with app.app_context():
         db.create_all()
         logger.info("Database tables created.")
@@ -84,7 +82,7 @@ def get_db_session():
 def check_database_connection() -> bool:
 
     try:
-        db.session.execute(text('SELECT 1'))
+        db.session.execute(text("SELECT 1"))
         return True
     except Exception as e:
         logger.error(f"Database connection failed: {str(e)}")

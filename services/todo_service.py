@@ -114,8 +114,8 @@ def update_todo(item_id: str,
 
         if title is not None:
             title = title.strip()
-            if not title:
-                return None, "Title cannot be empty."
+            if not title: return None, "Title cannot be empty."
+            if len(title) > 200: return None, "Title is too long."
 
         if description is not None:
             description = description.strip()

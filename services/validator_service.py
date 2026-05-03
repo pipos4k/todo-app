@@ -44,7 +44,7 @@ def validate_todo_item_data(data: Dict[str, Any], is_update: bool = False) -> Op
             return "Title cannot be empty or just whitespace."
     
     if "status" in data and data["status"] is not None:
-        valid_statuses = {'ToDo', 'InProgress', 'Done'}
+        valid_statuses = {"ToDo", "InProgress", "Done"}
         if data["status"] not in valid_statuses:
             return f"Status must be one of: {', '.join(valid_statuses)}"
     
