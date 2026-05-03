@@ -16,10 +16,10 @@ setup_database.init_db(application)
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout) 
-    ]
+]
 )
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @application.route("/")
 def index():
-    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), "index.html")
 
 
 @application.route("/user/items", methods=["GET"])
@@ -36,9 +36,6 @@ def get_items(current_user):
 
     try:
         user_id = current_user["id"]
-        logger.info(f"User ID: {user_id}")
-        if not user_id:
-            return _unauthorized_response()
         
         items, error = todo_service.get_todos(
             status=request.args.get("status"),
@@ -58,8 +55,6 @@ def get_item(current_user, item_id):
 
     try:
         user_id = current_user["id"]
-        if not user_id:
-            return _unauthorized_response()
         
         item, error = todo_service.get_todo(item_id, user_id)
         
@@ -75,18 +70,15 @@ def create_item(current_user):
 
     try:
         user_id = current_user["id"]
-        if not user_id:
-            return _unauthorized_response()
         
-        data = request.get_json()
+        data = request.get_json()            
+        if not data:
+            return _error_response("No data provided.")
 
         validation_error = validator_service.validate_todo_item_data(data)
         if validation_error:
             logger.error(f"Wrong validation: {validation_error}")
             return _error_response(validation_error)
-        
-        if not data:
-            return _error_response("No data provided.")
         
         created_item, error = todo_service.create_todo(
             title=data.get("title"),
@@ -107,8 +99,6 @@ def delete_item(current_user ,item_id):
 
     try:
         user_id = current_user["id"]
-        if not user_id:
-            return _unauthorized_response()
         
         item, error = todo_service.delete_todo(item_id, user_id)
         
@@ -124,18 +114,15 @@ def update_item(current_user, item_id):
     
     try:
         user_id = current_user["id"]
-        if not user_id:
-            return _unauthorized_response()
         
         data = request.get_json()
+        if not data:
+            return _error_response("No data provided.")
 
         validation_error = validator_service.validate_todo_item_data(data, is_update=True)
         if validation_error:
             logger.error(f"Wrong validation: {validation_error}")
             return _error_response(validation_error)
-
-        if not data:
-            return _error_response("No data provided.")
         
         updated_item, error = todo_service.update_todo(
             item_id=item_id,
@@ -156,13 +143,12 @@ def register():
 
     try:
         data = request.get_json()
+        if not data:
+            return _error_response("No data provided.")
 
         validation_error = validator_service.validate_user_registration_data(data)
         if validation_error:
             return _error_response(validation_error)
-
-        if not data:
-            return _error_response("No data provided.")
         
         created_user, error = user_service.register_user(
             email=data.get("email"),
@@ -180,7 +166,6 @@ def login():
 
     try:
         data = request.get_json()
-
         if not data:
             return _error_response("No data provided.")
         
@@ -221,11 +206,6 @@ def _success_response(data, status_code=200):
 def _error_response(error_message, status_code=400):
 
     return jsonify({"success": False, "error": error_message}), status_code
-
-
-def _unauthorized_response(): 
-
-    return _error_response("User authentication required. Please login.", 401)
 
 
 def _handle_exception(exception, route_name):

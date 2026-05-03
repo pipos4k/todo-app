@@ -12,13 +12,13 @@ def get_all_items(user_id: Optional[str] = None,
                   sort_order: str = "asc") -> List[Dict[str, Any]]:
     
     try: 
-        query = Item.query
+        item = Item.query
         
         if user_id:
-            query = query.filter_by(user_id=user_id)
+            item = item.filter_by(user_id=user_id)
         
-        query = _apply_sorting(query, sort_by, sort_order)
-        return [item.to_dict() for item in query.all()]
+        item = _apply_sorting(item, sort_by, sort_order)
+        return [item.to_dict() for item in item.all()]
     except Exception as e:
         logger.error(f"Error retrieving all items for {user_id}: {e}")
         return []
@@ -30,13 +30,13 @@ def get_items_by_status(status: str,
                         sort_order: str = "asc") -> List[Dict[str, Any]]:
 
     try:
-        query = Item.query.filter_by(status=status)
+        item = Item.query.filter_by(status=status)
 
         if user_id:
-            query = query.filter_by(user_id=user_id)
+            item = item.filter_by(user_id=user_id)
 
-        query = _apply_sorting(query, sort_by, sort_order)
-        return [item.to_dict() for item in query.all()]
+        item = _apply_sorting(item, sort_by, sort_order)
+        return [item.to_dict() for item in item.all()]
     except Exception as e:
         logger.error(f"Error retrieving items by status: {status} for user {user_id}: {e}")
         return []
@@ -46,12 +46,12 @@ def get_item_by_id(item_id: str,
                     user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
 
     try:
-        query = Item.query.get(item_id)
+        item = Item.query.get(item_id)
 
-        if query and user_id and query.user_id != user_id:
+        if item and user_id and item.user_id != user_id:
             return None
 
-        return query.to_dict() if query else None
+        return item.to_dict() if item else None
     except Exception as e:
         logger.error(f"Error retrieving item by id: {item_id} for user {user_id}: {e}")
         return None
@@ -59,12 +59,12 @@ def get_item_by_id(item_id: str,
 
 def get_all_ids(user_id: Optional[str] = None) -> List[Dict[str, str]]:
     try:
-        query = Item.query.with_entities(Item.id)
+        item = Item.query.with_entities(Item.id)
 
         if user_id:
-            query = query.filter_by(user_id=user_id)
+            item = item.filter_by(user_id=user_id)
 
-        return [{'id': item_id[0]} for item_id in query.all()]
+        return [{"id": item_id[0]} for item_id in item.all()]
     except Exception as e:
         logger.error(f"Error retrieving all item IDs for user {user_id}: {e}")
         return []
@@ -98,16 +98,13 @@ def create_item(item_id: str,
 def delete_item(item_id: str, 
                 user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
     try:
-        query = Item.query.get(item_id)
+        item = Item.query.get(item_id)
 
-        if not query:
-            return None
-
-        if user_id and query.user_id != user_id:
+        if not item or (user_id and item.user_id != user_id):
             return None
         
-        item_dict = query.to_dict()
-        db.session.delete(query)
+        item_dict = item.to_dict()
+        db.session.delete(item)
         db.session.commit()
         logger.info(f"Deleted item {item_id} for user {user_id}")
         return item_dict
@@ -121,30 +118,30 @@ def update_item(item_id: str,
                 status: Optional[str] = None, 
                 user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
     try:
-        query = Item.query.get(item_id)
+        item = Item.query.get(item_id)
 
-        if not query:
+        if not item or (user_id and item.user_id != user_id):
             return None
+                
+        updates = [("title", title),
+                ("description", description),
+                ("status", status)]
         
-        if user_id and query.user_id != user_id:
-            return None
-        
-        if title is not None:
-            query.title = title.strip() if title else ""
-        if description is not None:
-            query.description = description if description else ""
-        if status is not None:
-            query.status = status
+        for field, value in updates:
+            if value is not None:
+                logger.info("Try to update item.....")
+                setattr(item, field, value)
 
         db.session.commit()
         logger.info(f"Updated item {item_id} for user {user_id}")
-        return query.to_dict()
+        return item.to_dict()
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Error updating item {item_id} for user {user_id}: {e}")
         return None
 
 
-def _apply_sorting(query, sort_by: str, sort_order: str):
+def _apply_sorting(item, sort_by: str, sort_order: str):
 
     if sort_by not in ALLOWED_SORT_COLUMNS:
         sort_by = "id"
@@ -152,5 +149,5 @@ def _apply_sorting(query, sort_by: str, sort_order: str):
     sort_column = getattr(Item, sort_by)
     
     if sort_order.lower() == "desc":
-        return query.order_by(sort_column.desc())
-    return query.order_by(sort_column.asc())
+        return item.order_by(sort_column.desc())
+    return item.order_by(sort_column.asc())

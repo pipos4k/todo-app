@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_SORT_COLUMNS = ['id', 'email', 'created_at']
+ALLOWED_SORT_COLUMNS = ["id", "email", "created_at"]
 
 
 def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
@@ -35,10 +35,10 @@ def get_user_with_password(email: str) -> Optional[Dict[str, Any]]:
             return None
 
         return {
-            'id': user.id,
-            'email': user.email,
-            'password_hash': user.password_hash,
-            'created_at': user.created_at
+            "id": user.id,
+            "email": user.email,
+            "password_hash": user.password_hash,
+            "created_at": user.created_at
         }
     except Exception as e:
         logger.error(f"Error retrieving user with password for email: {email}: {e}")
@@ -49,7 +49,7 @@ def get_all_user_ids() -> List[Dict[str, str]]:
 
     try:
         users = User.query.with_entities(User.id).all()
-        return [{'id': user_id[0]} for user_id in users]
+        return [{"id": user_id[0]} for user_id in users]
     except Exception as e:
         logger.error(f"Error retrieving all user IDs: {e}")
         return []
@@ -101,7 +101,8 @@ def delete_user(user_id: str) -> bool:
     try:
         user = User.query.get(user_id)
         if not user:
-            return None
+            logger.warning(f"Delete failed: User with ID: {user_id} not found.")
+            return False
         
         db.session.delete(user)
         db.session.commit()
